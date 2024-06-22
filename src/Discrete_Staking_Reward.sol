@@ -25,7 +25,7 @@ import {IERC20} from "./interface/IERC20.sol";
 
 contract DiscreteStakingReward {
     IERC20 public immutable rewardToken;
-    IERC20 publcu immutable stakingToken;
+    IERC20 public immutable stakingToken;
 
     //VARIABLES
     uint256 totalSupply;
@@ -33,7 +33,7 @@ contract DiscreteStakingReward {
     uint256 private rewardIndex;
     mapping(address => uint256) public rewardEarned;
     uint256 private constant MULTIPLIER = 1e18;
-    mapping(address => uint256) public rewardIndexOf
+    mapping(address => uint256) public rewardIndexOf;
 
     //CONSTRUCTOR
     constructor(address _rewardToken, address _stakingToken) {
@@ -43,44 +43,48 @@ contract DiscreteStakingReward {
 
     //FUNCTONS
 
-    function stake(uint256 amount)external {
+    function stake(uint256 amount) external {
         updateReward(msg.sender);
         balanceOf[msg.sender] += amount;
         totalSupply += amount;
         stakingToken.transferFrom(msg.sender, address(this), amount);
     }
 
-    function unStake(uint256 amount)external {
+    function unStake(uint256 amount) external {
         updateReward(msg.sender);
         balanceOf[msg.sender] -= amount;
         totalSupply -= amount;
         stakingToken.transfer(msg.sender, amount);
     }
 
-    function Claim()external returns(uint256){
+    function Claim() external returns (uint256) {
         updateReward(msg.sender);
-        uint256 reward = earned[msg.sender];
-        if reward > 0 {
-            earned[msg.sender] = 0;
+        uint256 reward = rewardEarned[msg.sender];
+        if (reward > 0) {
+            rewardEarned[msg.sender] = 0;
             rewardToken.transfer(msg.sender, reward);
         }
         return reward;
     }
 
-    function calculateReward(address account) private view returns(uint256){
+    function calculateReward(address account) private view returns (uint256) {
         uint shares = balanceOf[account];
-        return (shares * (rewardIndex - reardIndexOf[account])) / MULTIPLIER;
+        return (shares * (rewardIndex - rewardIndexOf[account])) / MULTIPLIER;
     }
-    function calculateRewardEarned(address account) external view returns(uint256){
-        return earned[accounnt] + calculateReward(account);
+
+    function calculateRewardrewardEarned(
+        address account
+    ) external view returns (uint256) {
+        return rewardEarned[account] + calculateReward(account);
     }
 
     function updateRewardIndex(uint256 reward) external {
-        rewardIndex.transferFrom(msg.sender, address(this), reward);
-        rewardIndex += (reward* MULTIPLIER) / totalSupply;
+        rewardToken.transferFrom(msg.sender, address(this), reward);
+        rewardIndex += (reward * MULTIPLIER) / totalSupply;
     }
+
     function updateReward(address account) private {
-        earned[account] += calculateReward(account);
+        rewardEarned[account] += calculateReward(account);
         rewardIndexOf[account] = rewardIndex;
     }
 }
